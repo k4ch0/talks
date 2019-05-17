@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <title></title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="reveal.js/css/reveal.css">
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="reveal.js/css/theme/black.css" id="theme">
+  <!-- Printing and PDF exports -->
+  <script>
+    var link = document.createElement( 'link' );
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match( /print-pdf/gi ) ? 'reveal.js/css/print/pdf.css' : 'reveal.js/css/print/paper.css';
+    document.getElementsByTagName( 'head' )[0].appendChild( link );
+  </script>
+  <!--[if lt IE 9]>
+  <script src="reveal.js/lib/js/html5shiv.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+
+<section class="slide level2">
+
+<p>+++ title= 'Improve Ansible Roles with Molecule' date= &quot;2019-03-07&quot; featured= &quot;_assets/img/Background1.jpg&quot; # outputs= &quot;Reveal&quot; type= &quot;slide&quot;</p>
+<p>description= &quot;Presentation for the doxmx team&quot;</p>
+<p>theme= &quot;night&quot;</p>
+<p>[revealoptions] transition= &quot;convex&quot; controls= true controlsBackArrows= &quot;hidden&quot; progress= true slideNumber= true history= false center= true showNotes= false width= &quot;100%&quot; height= &quot;100%&quot; margin= 0.2 minScale= 0.2 maxScale= 1.5</p>
+<p>+++</p>
+</section>
+<section id="improve-ansible-roles-with-molecule" class="slide level2">
+<h1>Improve Ansible Roles with Molecule</h1>
+<!-- .slide: data-background="_assets/img/Background1.jpg" -->
+<!-- .slide: data-background="_assets/img/BackgroundAnsible.png" -->
+</section>
+<section id="ansible" class="slide level2">
+<h1>Ansible</h1>
+<section>
+<div style="text-align: left; float: left;">
+<pre><code>**Use Cases**&lt;/p&gt;
+- Configuration Management&lt;/p&gt;
+- Software Provisioning&lt;/p&gt;
+- Security and Compliance&lt;/p&gt;
+- Application Deployment&lt;/p&gt;
+- Orchestration&lt;/p&gt;
+- Continuous Delivery&lt;/p&gt;
+&lt;!-- more Elements --&gt;</code></pre>
+</div>
+<div style="text-align: left; float: right;">
+<pre><code>**Attributes**&lt;/p&gt;
+- Simple&lt;/p&gt;
+- Powerful&lt;/p&gt;
+- Agentless&lt;/p&gt;
+- Cross Platform&lt;/p&gt;
+- Over 450 Modules&lt;/p&gt;
+- Big Community&lt;/p&gt;
+&lt;!-- more Elements --&gt;</code></pre>
+</div>
+</section>
+<p>Note: Ansible es una herramienta de automatización open source escrita en python, que nos ayuda a configurar hosts remotos, aprovisionar software, e inclusive orquestar tareas mas complicadas como Continuos Deployment o Rolling Updates con Cero Downtime. En lugar de tener scripts para cada tarea. Ansible es:</p>
+<ul>
+<li>Simple</li>
+<li>Poderoso</li>
+<li>No necesita agente</li>
+<li>Multiplataforma</li>
+<li>Cuenta con mas de 450 Modulos</li>
+<li>Gran comunidad alrededor del proyecto</li>
+</ul>
+</section>
+<section id="ansible-1" class="slide level2">
+<h1>Ansible</h1>
+<figure>
+<img src="_assets/img/AnsibleArch.png" alt="Ansible Architecture" /><figcaption>Ansible Architecture</figcaption>
+</figure>
+<p>Note: Revisando la arquitectura de Ansible tenemos:</p>
+<ul>
+<li>Playbook: &quot;El libro de jugadas&quot; que contiene las tareas a ejecutar.</li>
+<li>Inventario:donde se definen los hosts con los cuales va a interactuar ansible, esta formato INI. Se definen grupos de hosts y algunas variables opcionales ()IP, hostname, ssh user, key file)</li>
+<li>Modulos son pequenos programas que ejecuta Ansible de manera remota.</li>
+<li>API: Aun esta en construccion pero hay plugins que ya la usan (ansible tower)</li>
+<li>Plugins: Agregan funcionabilidad adicional al core de Ansible (ARA)</li>
+</ul>
+<p>Todo esto se se aplica a los hosts remotos o a los dispositivos de red.</p>
+</section>
+<section id="ansible-2" class="slide level2">
+<h1>Ansible</h1>
+<p><img src="_assets/img/Ansible_Playbook.png" width="70%" height="70%" ></p>
+<p>Note: Los componentes de un playbook son, revisando desde la unidad mas pequena son:</p>
+<ul>
+<li>Tasks, que ejecutan el modulo de Ansible</li>
+<li>Al conjunto de varias tasks relacionadas, se le llama Play</li>
+<li>Al conjunto de diferentes Plays/jugadas se le llama Playbook.</li>
+</ul>
+</section>
+<section id="ansible-3" class="slide level2">
+<h1>Ansible</h1>
+<ul>
+<li><strong>Playbooks</strong> contain/connect <strong>roles</strong><br />
+</li>
+<li><strong>Roles</strong> contain <strong>plays</strong></li>
+<li><strong>Plays</strong> contain <strong>tasks</strong></li>
+<li><strong>Tasks</strong> execute a <strong>module</strong></li>
+<li><strong>Tasks</strong> run sequencially</li>
+<li><strong>Handlers</strong> are triggered by <strong>tasks</strong>, runs once at the end of the <strong>play</strong></li>
+</ul>
+<p>Note: Revisando desde la unidad mas grande tenemos Role is a list of tasks reusable Playbook conecta los roles con los hosts</p>
+</section>
+<section class="slide level2">
+
+<!-- .slide: data-background="_assets/img/BackgroundTest.png" -->
+<p>Note: Por que es importante la automatizacion de pruebas?</p>
+</section>
+<section id="test-automation" class="slide level2">
+<h1>Test Automation</h1>
+<ul>
+<li>Reliable Code</li>
+<li>Quality</li>
+<li>Fast feedback</li>
+<li>Time and cost saving</li>
+<li>Faster Development Cycle</li>
+<li>CI/CD</li>
+<li>Repeatability</li>
+<li>Test same change accross multiple environments (OS, Providers); multiple data sets</li>
+</ul>
+<p>Note: La automatizacion de las pruebas nos ayuda a:</p>
+<ul>
+<li>Tener un codigo mas seguro y confiable</li>
+<li>Mejora la calidad de nuestro codigo ya que permiten que se ejecuten más pruebas en menos tiempo, aumentando la cobertura de las pruebas, y realizando más exigentes.</li>
+<li>Reducimos el tiempo y el costo de un desarrollo</li>
+<li>Nos ayuda a tener un ciclo de desarrollo mas rapido ya que lo podemos/debemos integrar con alguna herramienta de CI/CD</li>
+<li>Repetibilidad, con lo cual podemos probar el mismo cambio en multples ambientes, sistemas operativos, o provides, o con diferentes data sets</li>
+</ul>
+</section>
+<section id="test-automation-1" class="slide level2">
+<h1>Test Automation</h1>
+<h4 id="testing-options-for-ansible">Testing options for Ansible</h4>
+<ul>
+<li>Ansible tasks <em>- Test Ansible w/ Ansible</em><!-- .element: class="fragment" --></li>
+<li>Test Kitchen <em>- Test Ansible w/ Ruby</em><!-- .element: class="fragment" --></li>
+<li>ansible-test <em>- Test Ansible w/ Unmaintained Python</em><!-- .element: class="fragment" --></li>
+<li>Molecule <em>- Test Ansible w/ Python</em><!-- .element: class="fragment" --></li>
+</ul>
+<p>Note: Algunas herramientas que revise, despues de ver la conferencia de Elana Hashman en en Ansible Fest 2017 son:</p>
+<p>Testing Ansible with Ansible Tasks -&gt; Test ansible with Ansible tasks Benefits:</p>
+<ul>
+<li>As flexible and powerful as you need it Issues:</li>
+<li>High development cost</li>
+<li>Ansible can't detect ansible bugs</li>
+<li>Need to write your own provisioner</li>
+</ul>
+<p>Testing Ansible with ansible-test -&gt; Benefits:</p>
+<ul>
+<li>Written in Python</li>
+<li>Solves the provisioning problem in &quot;Test ansible with Ansible&quot;</li>
+<li>Simple tool with small codebase Issues:</li>
+<li>Onlys support docker provisioner on dEbian-based images</li>
+<li>Does not apear to be actively maintained</li>
+</ul>
+<p>Testing Ansible with Test Kitchen -&gt; Benefits:</p>
+<ul>
+<li>Large community</li>
+<li>Supports Ansible</li>
+<li>Supportw windows testing for Ansible Issues:</li>
+<li>Written in Ruby</li>
+<li>Verifiers are Ruby or bash based</li>
+<li>Installs Ansible on the target host and runs it locally</li>
+</ul>
+</section>
+<section class="slide level2">
+
+<!-- .slide: data-background="_assets/img/BackgroundMolecule.png" -->
+</section>
+<section id="molecule" class="slide level2">
+<h1>Molecule</h1>
+<h5 id="testing-ansible-with-molecule">Testing Ansible with Molecule</h5>
+<ul>
+<li>Tool designed to aid in the development and testing of Ansible roles.</li>
+<li>Provides support for testing with multiple instances, operating systems, providers, test frameworks and testing scenarios.</li>
+<li>Encourages an approach that results in consistently developed roles that are well-written, easily understood and maintained.</li>
+</ul>
+<p><a href="https://github.com/ansible/molecule" class="uri">https://github.com/ansible/molecule</a> </br> <a href="https://molecule.readthedocs.io/" class="uri">https://molecule.readthedocs.io/</a></p>
+<p>Note: De acuerdo a la propia documentacion de Molecule, se define como una herramienta disenada para ayudar en el desarrollo y pruebas de los roles de ansible. Brinda soporte para probar con diferentes instancias, OS, Providers, scenarios Se enfoca en generar los mejores roles posibles, tanto bien escritos como faciles de mantener</p>
+</section>
+<section id="molecule-1" class="slide level2">
+<h1>Molecule</h1>
+<h4 id="testing-ansible-with-molecule-1">Testing Ansible with Molecule</h4>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><strong>Pros</strong></th>
+<th style="text-align: left;"><strong>Cons</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">- Written in Python</td>
+<td style="text-align: left;">- No Windows support</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">- Ansible-Native</td>
+<td style="text-align: left;">- No Dinamyc Inventory support</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">- Established community</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">- Open Source</td>
+</tr>
+</tbody>
+</table>
+<p>Note:</p>
+<ul>
+<li>Escrito en python,<br />
+</li>
+<li>Desarrollado e integrado para ansible</li>
+<li>Comunidad Madura</li>
+<li>Open Source</li>
+</ul>
+</section>
+<section id="molecule-2" class="slide level2">
+<h1>Molecule</h1>
+<h4 id="testing-ansible-with-molecule-2">Testing Ansible with Molecule</h4>
+<ul>
+<li>Creates nodes for testing</li>
+<li>Run the playbook on the nodes</li>
+<li>Run the playbook again to test idempotence</li>
+<li>Lints the Ansible code with ansible-lint</li>
+<li>Lint the Python code with flake8</li>
+<li>Runs the verifier tests on the nodes to ensure the desired state</li>
+</ul>
+<p>Note:</p>
+<ul>
+<li>Creamos los nodos para probar, dependiendo del provisioner puede ser Docker, Vagrant, AWS, Azure, etc</li>
+<li>Se ejecutaran los playbooks en los nodos creados</li>
+<li>Volvera a correr el playbook, para probar idempotencia, es decir, que el tarea se aplique varias veces sin cambiar el resultado de primera vez.</li>
+<li>Buscaran problemas de estilo en el codigo de ansible usando ansible-lint</li>
+<li>Buscaran problemas en el codigo de python con flake8</li>
+<li>El verificador realizara loas pruebas para asegurar el estado deseado</li>
+</ul>
+</section>
+<section id="molecule-3" class="slide level2">
+<h1>Molecule</h1>
+<h4 id="testing-ansible-with-molecule-3">Testing Ansible with Molecule</h4>
+<p><img src="_assets/img/MoleculeProcess.jpeg" width="65%" height="65%" ></p>
+<p>Note:</p>
+</section>
+<section id="molecule-4" class="slide level2">
+<h1>Molecule</h1>
+<h4 id="testing-ansible-with-molecule-4">Testing Ansible with Molecule</h4>
+<ul>
+<li>What can I test?</li>
+<li>Files exists and permissions</li>
+<li>Service are running</li>
+<li>User exists and is member of the correct groups</li>
+<li>Package installed</li>
+<li>Basic Software interaction (Test web server basic authentication)</li>
+</ul>
+</section>
+<section class="slide level2">
+
+<!-- .slide: data-background="_assets/img/Background1.jpg" -->
+</section>
+<section id="molecule-demo" class="slide level2">
+<h1>Molecule Demo</h1>
+<ul>
+<li>Let's try!! <!-- .element: class="fragment" --></li>
+<li>Creates 2 nodes <!-- .element: class="fragment" --></li>
+<li>Converge both nodes <!-- .element: class="fragment" --></li>
+<li>Check for idempotence <!-- .element: class="fragment" --></li>
+<li>Lint the Ansible and Python code <!-- .element: class="fragment" --></li>
+<li>Verify the role against some tests <!-- .element: class="fragment" --> </br></li>
+<li>Github Repo: <!-- .element: class="fragment" --> </br><em>(Thanks to GaRaGeD for provide a playbook to test)</em><!-- .element: class="fragment" --> </br><a href="https://github.com/k4ch0/elastic_stack" class="uri">https://github.com/k4ch0/elastic_stack</a> <!-- .element: class="fragment" --></li>
+</ul>
+</section>
+<section id="molecule-demo-1" class="slide level2">
+<h1>Molecule Demo</h1>
+<h4 id="terminal-time">Terminal time!! <!-- .element: class="fragment" --></h4>
+</section>
+<section id="molecule-demo-2" class="slide level2">
+<h1>Molecule Demo</h1>
+<h4 id="to-do">TO-DO <!-- .element: class="fragment" --></h4>
+<ul>
+<li>Ansible-Vault implementation <!-- .element: class="fragment" --></li>
+<li>Integrating Molecule into Travis CI, Circle CI, Jenkinks, etc <!-- .element: class="fragment" --></li>
+</ul>
+</section>
+<section class="slide level2">
+
+<!-- .slide: data-background="_assets/img/BackgroundConclusion.jpg" -->
+</section>
+<section id="conclusion" class="slide level2">
+<h1>Conclusion <!-- .element: class="fragment" --></h1>
+<ul>
+<li>There are different testing solutions for Ansible, but Molecule is an Ansible-native and the robust option. <!-- .element: class="fragment" --></li>
+<li>Molecule allows you to create, converge, check idempotence, lint and verify your Ansible code. <!-- .element: class="fragment" --></li>
+<li>Molecule help you to create the best playbooks possible. <!-- .element: class="fragment" --></li>
+</ul>
+</section>
+<section id="questions" class="slide level2">
+<h1>Questions? <!-- .element: class="fragment" --></h1>
+</section>
+<section id="thank-you" class="slide level2">
+<h1>Thank you! <!-- .element: class="fragment" data-fragment-index="1" --></h1>
+<p><em>Talk links, references and resources can be found at:</em> <!-- .element: class="fragment" data-fragment-index="2" --> </br> <a href="https://luiscachog.io/talks/molecule-2019-03-07" class="uri">https://luiscachog.io/talks/molecule-2019-03-07</a> <!-- .element: class="fragment" data-fragment-index="3" --></p>
+</section>
+    </div>
+  </div>
+
+  <script src="reveal.js/lib/js/head.min.js"></script>
+  <script src="reveal.js/js/reveal.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true },
+          { src: 'reveal.js/plugin/notes/notes.js', async: true }
+        ]
+      });
+    </script>
+    </body>
+</html>
